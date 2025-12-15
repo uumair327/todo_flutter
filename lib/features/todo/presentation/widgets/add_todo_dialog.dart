@@ -1,0 +1,396 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:todo/features/todo/domain/entities/todo_entity.dart';
+import 'package:todo/features/todo/presentation/cubit/todo_cubit.dart';
+
+class AddTodoDialog extends StatefulWidget {
+  const AddTodoDialog({super.key});
+
+  @override
+  State<AddTodoDialog> createState() => _AddTodoDialogState();
+}
+
+class _AddTodoDialogState extends State<AddTodoDialog>
+    with SingleTickerProviderStateMixin {
+  final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  String _selectedCategory = 'personal';
+  bool _isLoading = false;
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutBack,
+    ));
+    _animationController.forward();
+    
+    // Auto-focus the text field
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _addTodo() async {
+    if (_controller.text.trim().isEmpty) {
+      _showErrorSnackBar('Please enter a todo title');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final todo = TodoEntity(
+        id: DateTime.now().toString(),
+        title: _controller.text.trim(),
+        isCompleted: false,
+        category: _selectedCategory,
+      );
+      
+      context.read<TodoCubit>().addTodoItem(todo);
+      
+      // Add a small delay for better UX
+      await Future.delayed(const Duration(milliseconds: 300));
+      
+      if (mounted) {
+        Navigator.pop(context);
+        _showSuccessSnackBar('Todo added successfully!');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      _showErrorSnackBar('Failed to add todo. Please try again.');
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 10,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                colorScheme.surface,
+                colorScheme.surface.withValues(alpha: 0.8),
+              ],
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with icon and title
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.add_task,
+                      color: colorScheme.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Add New Todo',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        Text(
+                          'Create a new task to stay organized',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Todo title input
+              Text(
+                'Task Title',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                maxLength: 100,
+                decoration: InputDecoration(
+                  hintText: 'Enter your task here...',
+                  prefixIcon: Icon(
+                    Icons.edit_note,
+                    color: colorScheme.primary,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colorScheme.outline),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                  ),
+                  filled: true,
+                  fillColor: colorScheme.surface,
+                  counterText: '',
+                ),
+                textCapitalization: TextCapitalization.sentences,
+                onSubmitted: (_) => _addTodo(),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Category selection
+              Text(
+                'Category',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              // Category chips
+              Row(
+                children: [
+                  Expanded(
+                    child: _CategoryChip(
+                      label: 'Personal',
+                      icon: Icons.person,
+                      isSelected: _selectedCategory == 'personal',
+                      onTap: () {
+                        setState(() {
+                          _selectedCategory = 'personal';
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _CategoryChip(
+                      label: 'Work',
+                      icon: Icons.work,
+                      isSelected: _selectedCategory == 'work',
+                      onTap: () {
+                        setState(() {
+                          _selectedCategory = 'work';
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 32),
+              
+              // Action buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: _isLoading ? null : () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _addTodo,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: _isLoading
+                          ? SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  colorScheme.onPrimary,
+                                ),
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add,
+                                  size: 20,
+                                  color: colorScheme.onPrimary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Add Todo',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.onPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CategoryChip({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? colorScheme.primary.withValues(alpha: 0.1)
+              : colorScheme.surface,
+          border: Border.all(
+            color: isSelected 
+                ? colorScheme.primary
+                : colorScheme.outline.withValues(alpha: 0.5),
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected 
+                  ? colorScheme.primary
+                  : colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected 
+                    ? colorScheme.primary
+                    : colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
