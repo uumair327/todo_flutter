@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:todo/core/constants/constants.dart';
 import 'package:todo/features/todo/presentation/cubit/todo_cubit.dart';
 import 'package:todo/features/todo/presentation/cubit/todo_state.dart';
 import 'package:todo/features/todo/presentation/widgets/todo_item_widget.dart';
@@ -14,8 +15,8 @@ class TodoListWidget extends StatelessWidget {
         if (state.todos.isEmpty) {
           return const Center(
             child: Text(
-              'No todos yet!',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
+              AppStrings.noTodosYet,
+              style: TextStyle(fontSize: fontSizeLarge, color: Colors.grey),
             ),
           );
         }

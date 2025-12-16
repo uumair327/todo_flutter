@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:todo/core/constants/constants.dart';
 import 'package:todo/features/todo/domain/usecases/filter_todos.dart';
 import 'package:todo/features/todo/presentation/cubit/todo_cubit.dart';
 
@@ -16,10 +17,10 @@ class _TodoFilterChipsState extends State<TodoFilterChips> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 60,
+      height: sizeBoxHeightVeryLarge,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: paddingHorizontal),
         children: FilterType.values.map((filter) {
           return Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -42,15 +43,15 @@ class _TodoFilterChipsState extends State<TodoFilterChips> {
   String _getFilterLabel(FilterType filter) {
     switch (filter) {
       case FilterType.all:
-        return 'All';
+        return AppStrings.filterAll;
       case FilterType.completed:
-        return 'Completed';
+        return AppStrings.filterCompleted;
       case FilterType.pending:
-        return 'Pending';
+        return AppStrings.filterPending;
       case FilterType.work:
-        return 'Work';
+        return AppStrings.filterWork;
       case FilterType.personal:
-        return 'Personal';
+        return AppStrings.filterPersonal;
     }
   }
 }

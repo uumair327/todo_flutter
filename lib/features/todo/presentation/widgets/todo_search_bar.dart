@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:todo/core/constants/constants.dart';
 import 'package:todo/features/todo/presentation/cubit/todo_cubit.dart';
 
 class TodoSearchBar extends StatelessWidget {
@@ -13,11 +14,11 @@ class TodoSearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(paddingAll),
       child: TextField(
         controller: controller,
         decoration: InputDecoration(
-          hintText: 'Search todos...',
+          hintText: AppStrings.searchTodosHint,
           prefixIcon: const Icon(Icons.search),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),

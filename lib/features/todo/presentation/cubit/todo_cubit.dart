@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:todo/core/constants/constants.dart';
 import 'package:todo/features/todo/domain/entities/todo_entity.dart';
 import 'package:todo/features/todo/domain/usecases/add_todo.dart';
 import 'package:todo/features/todo/domain/usecases/delete_todo.dart';
@@ -71,10 +72,10 @@ class TodoCubit extends Cubit<TodoState> {
         visible = visible.where((t) => !t.isCompleted).toList();
         break;
       case FilterType.work:
-        visible = visible.where((t) => t.category == 'work').toList();
+        visible = visible.where((t) => t.category == AppCategories.work).toList();
         break;
       case FilterType.personal:
-        visible = visible.where((t) => t.category == 'personal').toList();
+        visible = visible.where((t) => t.category == AppCategories.personal).toList();
         break;
       case FilterType.all:
         // Show all todos - no filtering needed

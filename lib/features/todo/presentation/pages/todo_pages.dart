@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo/core/constants/constants.dart';
 import 'package:todo/features/todo/presentation/widgets/add_todo_dialog.dart';
 import 'package:todo/features/todo/presentation/widgets/todo_filter_chips.dart';
 import 'package:todo/features/todo/presentation/widgets/todo_list_widget.dart';
@@ -18,7 +19,7 @@ class _TodoPagesState extends State<TodoPages> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Todo App"),
+        title: const Text(AppStrings.appName),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Column(
@@ -31,10 +32,10 @@ class _TodoPagesState extends State<TodoPages> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddTodoDialog(context),
         icon: const Icon(Icons.add),
-        label: const Text('Add Todo'),
+        label: const Text(AppStrings.addTodo),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        elevation: 4,
+        elevation: smallElevation,
       ),
     );
   }
@@ -43,7 +44,7 @@ class _TodoPagesState extends State<TodoPages> {
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
+      barrierColor: barrierColor,
       builder: (context) => const AddTodoDialog(),
     );
   }

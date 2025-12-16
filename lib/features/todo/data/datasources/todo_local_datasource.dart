@@ -1,3 +1,4 @@
+import 'package:todo/core/constants/constants.dart';
 import 'package:todo/features/todo/data/models/todo_model.dart';
 import 'package:todo/features/todo/domain/usecases/filter_todos.dart';
 
@@ -28,9 +29,9 @@ class TodoLocalDatasource {
       case FilterType.pending:
         return _todos.where((t) => !t.isCompleted).toList();
       case FilterType.work:
-        return _todos.where((t) => t.category == 'work').toList();
+        return _todos.where((t) => t.category == AppCategories.work).toList();
       case FilterType.personal:
-        return _todos.where((t) => t.category == 'personal').toList();
+        return _todos.where((t) => t.category == AppCategories.personal).toList();
       default:
         return _todos;
     }

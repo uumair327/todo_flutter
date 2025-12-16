@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:todo/core/constants/constants.dart';
 import 'package:todo/features/todo/domain/entities/todo_entity.dart';
 import 'package:todo/features/todo/presentation/cubit/todo_cubit.dart';
 
@@ -14,7 +15,7 @@ class _AddTodoDialogState extends State<AddTodoDialog>
     with SingleTickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  String _selectedCategory = 'personal';
+  String _selectedCategory = AppCategories.defaultCategory;
   bool _isLoading = false;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -23,18 +24,14 @@ class _AddTodoDialogState extends State<AddTodoDialog>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
+      duration: fastAnimationDuration,
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutBack,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
+    );
     _animationController.forward();
-    
+
     // Auto-focus the text field
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
@@ -51,7 +48,7 @@ class _AddTodoDialogState extends State<AddTodoDialog>
 
   Future<void> _addTodo() async {
     if (_controller.text.trim().isEmpty) {
-      _showErrorSnackBar('Please enter a todo title');
+      _showErrorSnackBar(AppStrings.enterTodoTitle);
       return;
     }
 
@@ -66,21 +63,21 @@ class _AddTodoDialogState extends State<AddTodoDialog>
         isCompleted: false,
         category: _selectedCategory,
       );
-      
+
       context.read<TodoCubit>().addTodoItem(todo);
-      
+
       // Add a small delay for better UX
-      await Future.delayed(const Duration(milliseconds: 300));
-      
+      await Future.delayed(slowAnimationDuration);
+
       if (mounted) {
         Navigator.pop(context);
-        _showSuccessSnackBar('Todo added successfully!');
+        _showSuccessSnackBar(AppStrings.todoAddedSuccess);
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      _showErrorSnackBar('Failed to add todo. Please try again.');
+      _showErrorSnackBar(AppStrings.failedToAddTodo);
     }
   }
 
@@ -88,7 +85,7 @@ class _AddTodoDialogState extends State<AddTodoDialog>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
+        backgroundColor: snackBarBackGroundColorError,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -98,7 +95,7 @@ class _AddTodoDialogState extends State<AddTodoDialog>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.green,
+        backgroundColor: snackBarBackGroundColorSuccess,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -108,18 +105,16 @@ class _AddTodoDialogState extends State<AddTodoDialog>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return ScaleTransition(
       scale: _scaleAnimation,
       child: Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        elevation: 10,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadiusLarge)),
+        elevation: mediumElevation,
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(paddingAllLarge),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(borderRadiusLarge),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -148,20 +143,20 @@ class _AddTodoDialogState extends State<AddTodoDialog>
                       size: 24,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: paddingHorizontal),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Add New Todo',
+                          AppStrings.addNewTodo,
                           style: theme.textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onSurface,
                           ),
                         ),
                         Text(
-                          'Create a new task to stay organized',
+                          AppStrings.createTaskSubtitle,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
@@ -171,35 +166,35 @@ class _AddTodoDialogState extends State<AddTodoDialog>
                   ),
                 ],
               ),
-              
-              const SizedBox(height: 24),
-              
+
+              const SizedBox(height: paddingAllLarge),
+
               // Todo title input
               Text(
-                'Task Title',
+                AppStrings.taskTitle,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: colorScheme.onSurface,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: sizeBoxHeight),
               TextField(
                 controller: _controller,
                 focusNode: _focusNode,
-                maxLength: 100,
+                maxLength: maxTitleLength,
                 decoration: InputDecoration(
-                  hintText: 'Enter your task here...',
-                  prefixIcon: Icon(
-                    Icons.edit_note,
-                    color: colorScheme.primary,
-                  ),
+                  hintText: AppStrings.enterTaskHint,
+                  prefixIcon: Icon(Icons.edit_note, color: colorScheme.primary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: colorScheme.outline),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
+                      width: borderWidth,
+                    ),
                   ),
                   filled: true,
                   fillColor: colorScheme.surface,
@@ -208,75 +203,81 @@ class _AddTodoDialogState extends State<AddTodoDialog>
                 textCapitalization: TextCapitalization.sentences,
                 onSubmitted: (_) => _addTodo(),
               ),
-              
-              const SizedBox(height: 20),
-              
+
+              const SizedBox(height: sizeBoxHeightLarge),
+
               // Category selection
               Text(
-                'Category',
+                AppStrings.category,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: colorScheme.onSurface,
                 ),
               ),
-              const SizedBox(height: 12),
-              
+              const SizedBox(height: sizeBoxHeightSmall),
+
               // Category chips
               Row(
                 children: [
                   Expanded(
                     child: _CategoryChip(
-                      label: 'Personal',
+                      label: AppStrings.categoryPersonal,
                       icon: Icons.person,
-                      isSelected: _selectedCategory == 'personal',
+                      isSelected: _selectedCategory == AppCategories.personal,
                       onTap: () {
                         setState(() {
-                          _selectedCategory = 'personal';
+                          _selectedCategory = AppCategories.personal;
                         });
                       },
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: sizeBoxHeightSmall),
                   Expanded(
                     child: _CategoryChip(
-                      label: 'Work',
+                      label: AppStrings.categoryWork,
                       icon: Icons.work,
-                      isSelected: _selectedCategory == 'work',
+                      isSelected: _selectedCategory == AppCategories.work,
                       onTap: () {
                         setState(() {
-                          _selectedCategory = 'work';
+                          _selectedCategory = AppCategories.work;
                         });
                       },
                     ),
                   ),
                 ],
               ),
-              
-              const SizedBox(height: 32),
-              
+
+              const SizedBox(height: sizeBoxHeightExtraLarge),
+
               // Action buttons
               Row(
                 children: [
                   Expanded(
                     child: TextButton(
-                      onPressed: _isLoading ? null : () => Navigator.pop(context),
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.pop(context),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: paddingVertical,
+                        ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            borderRadiusSmall,
+                          ),
                         ),
                       ),
                       child: Text(
-                        'Cancel',
+                        AppStrings.cancel,
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: fontSizeMedium,
                           fontWeight: FontWeight.w600,
                           color: colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: sizeBoxHeightSmall),
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
@@ -284,18 +285,22 @@ class _AddTodoDialogState extends State<AddTodoDialog>
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: paddingVertical,
                         ),
-                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            borderRadiusSmall,
+                          ),
+                        ),
+                        elevation: extrasmallElevation,
                       ),
                       child: _isLoading
                           ? SizedBox(
-                              height: 20,
-                              width: 20,
+                              height: sizeBoxHeightLarge,
+                              width: sizeBoxWidthLarge,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                                strokeWidth: strokeWidth,
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   colorScheme.onPrimary,
                                 ),
@@ -306,14 +311,14 @@ class _AddTodoDialogState extends State<AddTodoDialog>
                               children: [
                                 Icon(
                                   Icons.add,
-                                  size: 20,
+                                  size: iconSizeMedium,
                                   color: colorScheme.onPrimary,
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: sizeBoxHeight),
                                 Text(
-                                  'Add Todo',
+                                  AppStrings.addTodo,
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: fontSizeMedium,
                                     fontWeight: FontWeight.w600,
                                     color: colorScheme.onPrimary,
                                   ),
@@ -349,41 +354,44 @@ class _CategoryChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        duration: const Duration(milliseconds: animationDuration),
+        padding: const EdgeInsets.symmetric(
+          vertical: paddingVertical,
+          horizontal: paddingHorizontal,
+        ),
         decoration: BoxDecoration(
-          color: isSelected 
+          color: isSelected
               ? colorScheme.primary.withValues(alpha: 0.1)
               : colorScheme.surface,
           border: Border.all(
-            color: isSelected 
+            color: isSelected
                 ? colorScheme.primary
                 : colorScheme.outline.withValues(alpha: 0.5),
             width: isSelected ? 2 : 1,
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(borderRadiusSmall),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
-              size: 20,
-              color: isSelected 
+              size: iconSizeMedium,
+              color: isSelected
                   ? colorScheme.primary
                   : colorScheme.onSurface.withValues(alpha: 0.7),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: sizeBoxHeight),
             Text(
               label,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: fontSizeSmall,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected 
+                color: isSelected
                     ? colorScheme.primary
                     : colorScheme.onSurface.withValues(alpha: 0.7),
               ),
